@@ -1,22 +1,42 @@
 import streamlit as st
+import time
 import random
 
-st.set_page_config(page_title="Forex Signal App", page_icon="📈", layout="centered")
+st.title("📈 AI OSCAR BOT")
 
-st.title("📊 Oscar Trade Bot")
+if "button_pressed" not in st.session_state:
+    st.session_state.button_pressed = False
 
-# Валютные пары
-forex_pairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF',
-               'AUD/USD', 'NZD/USD', 'USD/CAD', 'EUR/GBP']
-
-# Время экспирации
-expiration_times = ['1 мин', '5 мин', '15 мин', '30 мин', '1 час']
+# Полный список популярных валютных пар Форекс
+forex_pairs = [
+    'EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'AUD/USD', 'USD/CAD',
+    'NZD/USD', 'EUR/GBP', 'EUR/JPY', 'GBP/JPY', 'CHF/JPY', 'EUR/AUD',
+    'AUD/JPY', 'CAD/JPY', 'NZD/JPY', 'GBP/CAD', 'EUR/CAD', 'AUD/CAD',
+    'NZD/CAD', 'USD/SEK', 'USD/NOK', 'USD/DKK', 'EUR/NZD', 'GBP/NZD',
+    'AUD/NZD', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'
+]
 
 pair = st.selectbox("Выбери валютную пару:", forex_pairs)
-timeframe = st.selectbox("Выбери время экспирации:", expiration_times)
 
-if st.button("🔍 Получить сигнал"):
-    signal = random.choice(['📈 ВВЕРХ', '📉 ВНИЗ'])
-    st.success(f"🎯 Сигнал: {signal}")
-else:
-    st.info("Нажми кнопку, чтобы получить сигнал")
+expiration_times = ["15 сек", "30 сек", "1 мин", "3 мин", "5 мин"]
+expiration = st.selectbox("Время экспирации:", expiration_times)
+
+def press_button():
+    st.session_state.button_pressed = True
+
+if st.button("Получить сигнал", on_click=press_button):
+    pass
+
+if st.session_state.button_pressed:
+    placeholder = st.empty()
+    placeholder.info("🤖 Думаю...")
+
+    # Имитация задержки "думания" 3 секунды
+    for i in range(3):
+        time.sleep(1)
+        placeholder.info(f"🤖 Думаю{'.' * ((i + 1) % 4)}")
+
+    signal = random.choice(["📈 ВВЕРХ", "📉 ВНИЗ"])
+    placeholder.success(f"🎯 Сигнал для {pair} на {expiration}: {signal}")
+
+    st.session_state.button_pressed = False

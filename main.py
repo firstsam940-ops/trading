@@ -3,94 +3,77 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.spinner import Spinner
-from kivy.uix.widget import Widget
-from kivy.core.window import Window
+from kivy.clock import Clock
 import random
 
-# Устанавливаем фон приложения
-Window.clearcolor = (0.1, 0.1, 0.1, 1)  # тёмно-серый фон
-
-# Форекс валютные пары
-FOREX_PAIRS = (
-    'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF',
-    'AUD/USD', 'NZD/USD', 'USD/CAD', 'EUR/GBP',
-)
-
-EXPIRATION_TIMES = (
-    '1 мин', '5 мин', '15 мин', '30 мин', '1 час',
-)
 
 class TradingApp(BoxLayout):
     def __init__(self, **kwargs):
-        super().__init__(orientation='vertical', padding=20, spacing=20, **kwargs)
+        super().__init__(orientation='vertical', **kwargs)
 
-        # Заголовок
-        self.title_label = Label(
-            text='📊 Трейдинг Бот',
-            font_size=32,
-            size_hint=(1, None),
-            height=60,
-            color=(1, 1, 1, 1)
-        )
-        self.add_widget(self.title_label)
-
-        # Выбор валютной пары
         self.pair_spinner = Spinner(
             text='Выбери валютную пару',
-            values=FOREX_PAIRS,
+            values=('EUR/USD', 'BTC/USDT', 'ETH/USDT'),
             size_hint=(1, None),
-            height=50,
-            background_color=(0.3, 0.3, 0.3, 1),
-            color=(1, 1, 1, 1),
-            font_size=18
+            height=50
         )
         self.add_widget(self.pair_spinner)
 
-        # Выбор времени экспирации
         self.time_spinner = Spinner(
             text='Выбери время экспирации',
-            values=EXPIRATION_TIMES,
+            values=('15 сек', '30 сек', '1 мин', '5 мин', '15 мин'),
             size_hint=(1, None),
-            height=50,
-            background_color=(0.3, 0.3, 0.3, 1),
-            color=(1, 1, 1, 1),
-            font_size=18
+            height=50
         )
         self.add_widget(self.time_spinner)
 
-        # Результат сигнала
-        self.result_label = Label(
-            text='🎯 Сигнал появится здесь',
-            font_size=24,
-            size_hint=(1, None),
-            height=60,
-            color=(1, 1, 1, 1)
-        )
+        self.result_label = Label(text='🎯 Сигнал появится здесь', font_size=20)
         self.add_widget(self.result_label)
 
-        # Кнопка получить сигнал
-        self.signal_button = Button(
-            text='🔍 Получить сигнал',
-            size_hint=(1, None),
-            height=60,
-            background_color=(0.2, 0.6, 0.2, 1),
-            font_size=20,
-            color=(1, 1, 1, 1)
-        )
-        self.signal_button.bind(on_press=self.get_signal)
+        self.signal_button = Button(text='Получить сигнал', size_hint=(1, None), height=50)
+        self.signal_button.bind(on_press=self.start_timer)
         self.add_widget(self.signal_button)
 
-        # Пустое место внизу
-        self.add_widget(Widget())
+        self.timer_event = None
+        self.remaining_seconds = 0
 
-    def get_signal(self, instance):
+    def start_timer(self, instance):
+        time_text = self.time_spinner.text
+
+        time_mapping = {
+            '15 сек': 15,
+            '30 сек': 30,
+            '1 мин': 60,
+            '5 мин': 300,
+            '15 мин': 900
+        }
+
+        if time_text not in time_mapping:
+            self.result_label.text = '❌ Выбери корректное время!'
+            return
+
+        self.remaining_seconds = time_mapping[time_text]
+        self.result_label.text = f'⏳ Ожидаем {self.remaining_seconds} сек...'
+        self.signal_button.disabled = True
+
+        self.timer_event = Clock.schedule_interval(self.update_timer, 1)
+
+    def update_timer(self, dt):
+        self.remaining_seconds -= 1
+        if self.remaining_seconds <= 0:
+            Clock.unschedule(self.timer_event)
+            self.show_signal()
+        else:
+            self.result_label.text = f'⏳ Осталось: {self.remaining_seconds} сек'
+
+    def show_signal(self):
         signal = random.choice(['📈 ВВЕРХ', '📉 ВНИЗ'])
         self.result_label.text = f'🎯 Сигнал: {signal}'
+        self.signal_button.disabled = False
 
 
 class TradingSignalApp(App):
     def build(self):
-        self.title = 'Forex Signal App'
         return TradingApp()
 
 
